@@ -1,4 +1,5 @@
 import re
+import os
 import json
 
 import tensorflow as tf
@@ -28,7 +29,7 @@ flags.DEFINE_integer("save_checkpoints_steps", 1000, "save_checkpoints_steps")
 
 flags.DEFINE_integer("max_seq_length", 1024, "max_seq_length")
 
-flags.DEFINE_integer("max_eval_steps", 100, "Maximum number of eval steps.")
+flags.DEFINE_integer("max_eval_steps", 10, "Maximum number of eval steps.")
 
 flags.DEFINE_float("poly_power", 1.0, "The power of poly decay.")
 
@@ -206,13 +207,13 @@ def model_fn_builder(
         elif mode == tf.estimator.ModeKeys.EVAL:
 
             def metric_fn(loss, input_ids, output):
-                return {"eval_perplexity": tf.metrics.mean(tf.exp(tf.reduce_mean(loss)))}
+                return {"eval_perplexity": tf.metrics.mean(tf.exp(loss))}
 
-            eval_metrics = (metric_fn, [loss, input_ids, output])
+            eval_metrics = (metric_fn, {"loss":loss})
             output_spec = tf.contrib.tpu.TPUEstimatorSpec(
                 mode=mode,
                 loss=loss,
-                eval_metrics=eval_metrics,
+                eval_metrics=None,
                 scaffold_fn=scaffold_fn,
             )
         else:
@@ -246,7 +247,9 @@ def input_fn_builder(input_files, max_seq_length, is_training, num_cpu_threads=4
             d = d.shuffle(buffer_size = 100)
         else:
             d = tf.data.TFRecordDataset(input_files)
-            d = d.repeat(0)
+            # Since we evaluate for a fixed number of steps we don't want to encounter
+            # out-of-range exceptions.
+            d = d.repeat()
 
         d = d.apply(
             tf.contrib.data.map_and_batch(
@@ -348,13 +351,16 @@ def main(_):
 
     if FLAGS.do_eval:
         tf.logging.info("***** Running evaluation *****")
+        tf.logging.info("!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!! EVAL DOESNT WORK... YET")
         tf.logging.info("  Batch size = %d", FLAGS.eval_batch_size)
+
         eval_input_fn = input_fn_builder(
             input_files=input_files,
             max_seq_length=FLAGS.max_seq_length,
             is_training=False,
         )
         result = estimator.evaluate(input_fn=eval_input_fn, steps=FLAGS.max_eval_steps)
+
         output_eval_file = os.path.join(FLAGS.output_dir, "eval_results.txt")
         with tf.gfile.GFile(output_eval_file, "w") as writer:
             tf.logging.info("***** Eval results *****")

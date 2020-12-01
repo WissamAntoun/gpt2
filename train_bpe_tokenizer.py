@@ -31,31 +31,29 @@ if __name__ == "__main__":
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    try:
-        gpt2_tok.save(
-            args.output_dir, pretty=True
+
+    gpt2_tok.save(
+            os.path.join(args.output_dir,"tokenizer.json"), pretty=True
         )  # FIX Access is denied. (os error 5)
-    except Exception as ex:
-        print(ex)
     gpt2_tok.save_model(args.output_dir, args.output_file_name)
 
-    tokenizer = GPT2TokenizerFast(
-        vocab_file=os.path.join(args.output_dir, args.output_file_name) + "-vocab.json",
-        merges_file=os.path.join(args.output_dir, args.output_file_name)
-        + "-merges.txt",
-        add_prefix_space=True,
-    )
+    # tokenizer = GPT2TokenizerFast(
+    #     vocab_file=os.path.join(args.output_dir, args.output_file_name) + "-vocab.json",
+    #     merges_file=os.path.join(args.output_dir, args.output_file_name)
+    #     + "-merges.txt",
+    #     add_prefix_space=True,
+    # )
 
-    tokenizer.add_special_tokens(
-        {
-            "eos_token": "<|endoftext|>",
-            "bos_token": "<|endoftext|>",
-            "unk_token": "<|endoftext|>",
-            "pad_token": "<|endoftext|>",
-            "mask_token": "<|endoftext|>",
-        }
-    )
+    # tokenizer.add_special_tokens(
+    #     {
+    #         "eos_token": "<|endoftext|>",
+    #         "bos_token": "<|endoftext|>",
+    #         "unk_token": "<|endoftext|>",
+    #         "pad_token": "<|endoftext|>",
+    #         "mask_token": "<|endoftext|>",
+    #     }
+    # )
 
-    tokenizer.save_pretrained(
-        args.output_dir, legacy_format=False, filename_prefix=args.output_file_name
-    )
+    # tokenizer.save_pretrained(
+    #     args.output_dir, legacy_format=False, filename_prefix=args.output_file_name
+    # )
