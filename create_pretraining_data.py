@@ -50,22 +50,29 @@ def main(_):
         with tf.gfile.GFile(input_file, "r") as reader:
             for line in reader.readlines():
                 if line == "\n":
-                    continue
-                line = line.replace("\n", " ")
-                line = line.strip()
-                enc_line = gpt2_tok.encode(line)
-                if len(example) + len(enc_line) < FLAGS.max_len:
-                    example.extend(enc_line)
+                     # make sure that the example len is still less than max_len after adding <|endoftext|>
+                     # a rare occurence
+                    if len(example) + 1 < FLAGS.max_len:
+                        example.append(eos_id) # article1<|endoftext|>article2
+                    else:
+                        # replace the last token by <|endoftext|>, not perfect but this is so rare
+                        example[-1] = eos_id
                 else:
-                    temp_len_ex = len(example)
-                    example.extend(enc_line[: FLAGS.max_len - temp_len_ex - 1])
-                    example.append(eos_id)
-                    assert len(example) <= FLAGS.max_len
-                    if len(example) > 1:
-                        all_examples.append(example)
-                    example = enc_line[
-                        FLAGS.max_len - temp_len_ex - 1 :
-                    ]  # move in strides
+                    line = line.replace("\n", " ")
+                    line = line.strip()
+                    enc_line = gpt2_tok.encode(line)
+                    if len(example) + len(enc_line) < FLAGS.max_len:
+                        example.extend(enc_line)
+                    else:
+                        temp_len_ex = len(example)
+                        example.extend(enc_line[: FLAGS.max_len - temp_len_ex - 1])
+                        example.append(eos_id)
+                        assert len(example) <= FLAGS.max_len
+                        if len(example) > 1:
+                            all_examples.append(example)
+                        example = enc_line[
+                            FLAGS.max_len - temp_len_ex - 1 :
+                        ]  # move in strides
 
 
     for i, ex in enumerate(all_examples):
