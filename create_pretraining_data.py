@@ -22,6 +22,10 @@ flags.DEFINE_integer(
     "max_len", 1024, "The vocabulary file that the BERT model was trained on."
 )
 
+flags.DEFINE_integer(
+    "num_examples_print", 0, "Number of examples to print"
+)
+
 
 def create_int_feature(values):
     feature = tf.train.Feature(int64_list=tf.train.Int64List(value=list(values)))
@@ -80,7 +84,7 @@ def main(_):
         features["input_ids"] = create_int_feature(ex)
         tf_example = tf.train.Example(features=tf.train.Features(feature=features))
         writer.write(tf_example.SerializeToString())
-        if i < 5:
+        if i < FLAGS.num_examples_print:
             tf.logging.info("*** Example ***")
             tf.logging.info("Length: %d" % len(ex))
             tf.logging.info("Tokens: %s" % gpt2_tok.decode(ex))
