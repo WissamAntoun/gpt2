@@ -1,0 +1,19 @@
+!python3 run_pretraining.py \
+ --input_file="gs://ar_gpt2/pretraining_data/*" \
+ --output_dir="gs://ar_gpt2/pretraining_model/" \
+ --config_file="config/small-hparams.json" \
+ --batch_size=128 \
+ --eval_batch_size=8 \
+ --num_train_steps=1000000 \
+ --num_warmup_steps=25000 \
+ --learning_rate=3.39e-4 \
+ --save_checkpoints_steps=5000 \
+ --max_seq_length=1024 \
+ --max_eval_steps=10 \
+ --optimizer="lamb" \
+ --iterations_per_loop=5000 \
+ --keep_checkpoint_max=10 \
+ --use_tpu=True \
+ --tpu_name="argpt2" \
+ --do_train=True \
+ --do_eval=True
