@@ -50,33 +50,21 @@ def main(_):
     eos_id = gpt2_tok.eos_token_id
     all_examples = []
     for input_file in input_files:
+        queue = []
         example = []
         with tf.gfile.GFile(input_file, "r") as reader:
             for line in reader.readlines():
                 if line == "\n":
-                     # make sure that the example len is still less than max_len after adding <|endoftext|>
-                     # a rare occurence
-                    if len(example) + 1 < FLAGS.max_len:
-                        example.append(eos_id) # article1<|endoftext|>article2
-                    else:
-                        # replace the last token by <|endoftext|>, not perfect but this is so rare
-                        example[-1] = eos_id
+                    queue.append(eos_id)
                 else:
                     line = line.replace("\n", " ")
                     line = line.strip()
                     enc_line = gpt2_tok.encode(line)
-                    if len(example) + len(enc_line) < FLAGS.max_len:
-                        example.extend(enc_line)
-                    else:
-                        temp_len_ex = len(example)
-                        example.extend(enc_line[: FLAGS.max_len - temp_len_ex - 1])
-                        example.append(eos_id)
-                        assert len(example) <= FLAGS.max_len
-                        if len(example) > 1:
-                            all_examples.append(example)
-                        example = enc_line[
-                            FLAGS.max_len - temp_len_ex - 1 :
-                        ]  # move in strides
+                    queue.extend(enc_line)
+                if len(queue) > FLAGS.max_len:
+                    example = [queue.pop(0) for _ in range(FLAGS.max_len)]
+                    assert len(example) == FLAGS.max_len
+                    all_examples.append(example)
 
 
     for i, ex in enumerate(all_examples):
