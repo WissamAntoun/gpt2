@@ -1,7 +1,7 @@
-!python3 run_pretraining.py \
+python3 run_pretraining.py \
  --input_file="gs://ar_gpt2/pretraining_data/*" \
  --output_dir="gs://ar_gpt2/pretraining_model/" \
- --config_file="config/small-hparams.json" \
+ --config_file="config/small_hparams.json" \
  --batch_size=128 \
  --eval_batch_size=8 \
  --num_train_steps=1000000 \
