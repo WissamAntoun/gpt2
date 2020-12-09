@@ -40,7 +40,7 @@ python run_pretraining.py ^
  --save_checkpoints_steps=10 ^
  --max_seq_length=1024 ^
  --max_eval_steps=10 ^
- --optimizer="lamb" ^
+ --optimizer="adafactor" ^
  --iterations_per_loop=50 ^
  --keep_checkpoint_max=5 ^
  --use_tpu=False ^
