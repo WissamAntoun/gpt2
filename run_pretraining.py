@@ -35,6 +35,9 @@ flags.DEFINE_float("poly_power", 1.0, "The power of poly decay.")
 
 flags.DEFINE_enum("optimizer", "lamb", ["adamw", "lamb", "adafactor"], "The optimizer for training.")
 
+flags.DEFINE_bool("use_memory_saving_gradients", False, "Use this with 1.5B")
+
+
 flags.DEFINE_integer(
     "iterations_per_loop",
     1000,
@@ -144,6 +147,7 @@ def model_fn_builder(
     optimizer,
     poly_power,
     start_warmup_step,
+    use_memory_saving_gradients
 ):
     def model_fn(features, labels, mode, params):
         tf.logging.info("*** Features ***")
@@ -195,7 +199,8 @@ def model_fn_builder(
                 use_tpu,
                 optimizer,
                 poly_power,
-                start_warmup_step
+                start_warmup_step,
+                use_memory_saving_gradients=use_memory_saving_gradients
             )
 
             output_spec = tf.contrib.tpu.TPUEstimatorSpec(
@@ -326,7 +331,8 @@ def main(_):
         use_tpu=FLAGS.use_tpu,
         optimizer=FLAGS.optimizer,
         poly_power=FLAGS.poly_power,
-        start_warmup_step=FLAGS.start_warmup_step
+        start_warmup_step=FLAGS.start_warmup_step,
+        use_memory_saving_gradients=FLAGS.use_memory_saving_gradients
     )
 
     # If TPU is not available, this will fall back to normal Estimator on CPU
