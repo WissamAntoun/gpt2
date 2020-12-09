@@ -21,6 +21,7 @@ from __future__ import print_function
 import re
 import tensorflow as tf
 import lamb_optimizer
+from gpt_2_simple import memory_saving_gradients
 
 
 def create_optimizer(
@@ -33,6 +34,7 @@ def create_optimizer(
     poly_power=1.0,
     start_warmup_step=0,
     colocate_gradients_with_ops=False,
+    use_memory_saving_gradients=False
 ):
     """Creates an optimizer training op."""
     global_step = tf.train.get_or_create_global_step()
@@ -119,10 +121,14 @@ def create_optimizer(
         optimizer = tf.contrib.tpu.CrossShardOptimizer(optimizer)
 
     tvars = tf.trainable_variables()
-    grads = tf.gradients(loss, tvars)
+
+    if use_memory_saving_gradients:
+        grads = memory_saving_gradients.gradients(loss, tvars)
+    else:
+        grads = tf.gradients(loss, tvars)
 
     # This is how the model was pre-trained.
-    (grads, _) = tf.clip_by_global_norm(grads, clip_norm=1.0)
+    #(grads, _) = tf.clip_by_global_norm(grads, clip_norm=1.0)
 
     train_op = optimizer.apply_gradients(zip(grads, tvars), global_step=global_step)
 
