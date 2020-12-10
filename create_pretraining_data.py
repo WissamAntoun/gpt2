@@ -61,9 +61,9 @@ def main(_):
                     line = line.strip()
                     enc_line = gpt2_tok.encode(line)
                     queue.extend(enc_line)
-                if len(queue) > FLAGS.max_len:
-                    example = [queue.pop(0) for _ in range(FLAGS.max_len)]
-                    assert len(example) == FLAGS.max_len
+                if len(queue) > FLAGS.max_len +1:
+                    example = [queue.pop(0) for _ in range(FLAGS.max_len +1)]
+                    assert len(example) == FLAGS.max_len +1
                     all_examples.append(example)
 
 

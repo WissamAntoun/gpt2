@@ -350,7 +350,7 @@ def main(_):
         tf.logging.info("  Batch size = %d", FLAGS.batch_size)
         train_input_fn = input_fn_builder(
             input_files=input_files,
-            max_seq_length=FLAGS.max_seq_length,
+            max_seq_length=FLAGS.max_seq_length + 1,
             is_training=True,
         )
         estimator.train(input_fn=train_input_fn, max_steps=FLAGS.num_train_steps)
