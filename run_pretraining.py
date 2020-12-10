@@ -231,7 +231,7 @@ def model_fn_builder(
 def input_fn_builder(input_files, max_seq_length, is_training, num_cpu_threads=4):
     def input_fn(params):
         batch_size = params["batch_size"]
-        name_to_features = {"input_ids": tf.FixedLenFeature([max_seq_length], tf.int64)}
+        name_to_features = {"input_ids": tf.FixedLenFeature([max_seq_length + 1], tf.int64)}
         if is_training:
             #d = tf.data.TFRecordDataset(input_files)
             #d = d.repeat(1000)
@@ -350,7 +350,7 @@ def main(_):
         tf.logging.info("  Batch size = %d", FLAGS.batch_size)
         train_input_fn = input_fn_builder(
             input_files=input_files,
-            max_seq_length=FLAGS.max_seq_length + 1,
+            max_seq_length=FLAGS.max_seq_length,
             is_training=True,
         )
         estimator.train(input_fn=train_input_fn, max_steps=FLAGS.num_train_steps)
