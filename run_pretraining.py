@@ -1,7 +1,7 @@
 import re
 import os
 import json
-
+import math
 import tensorflow as tf
 
 import optimization
@@ -34,8 +34,6 @@ flags.DEFINE_integer("max_eval_steps", 10, "Maximum number of eval steps.")
 flags.DEFINE_float("poly_power", 1.0, "The power of poly decay.")
 
 flags.DEFINE_enum("optimizer", "lamb", ["adamw", "lamb"], "The optimizer for training.")
-
-flags.DEFINE_bool("use_memory_saving_gradients", False, "Use this with 1.5B")
 
 
 flags.DEFINE_integer(
@@ -211,16 +209,33 @@ def model_fn_builder(
             )
         elif mode == tf.estimator.ModeKeys.EVAL:
 
-            def metric_fn(loss, input_ids, output):
-                return {"eval_perplexity": tf.metrics.mean(tf.exp(loss))}
+            def metric_fn(loss):
+                """Evaluation metric Fn which runs on CPU."""
+                perplexity = tf.exp(tf.reduce_mean(loss))
+                bpc = tf.reduce_mean(loss) / tf.constant(math.log(2))
+                return {
+                    "perplexity": tf.metrics.mean(perplexity),
+                    "bpc": tf.metrics.mean(bpc),
+                }
 
-            eval_metrics = (metric_fn, {"loss":loss})
+            if FLAGS.use_tpu:
+              with tf.colocate_with(loss):
+                loss = tf.contrib.tpu.cross_replica_sum(loss) \
+                          / FLAGS.num_tpu_cores
+            metric_loss = tf.tile(tf.reshape(loss, [1, 1]), [FLAGS.eval_batch_size, 1])
             output_spec = tf.contrib.tpu.TPUEstimatorSpec(
                 mode=mode,
                 loss=loss,
-                eval_metrics=None,
-                scaffold_fn=scaffold_fn,
-            )
+                eval_metrics=(metric_fn, [metric_loss]),
+                scaffold_fn=scaffold_fn)
+
+            # eval_metrics = (metric_fn, {"loss":loss})
+            # output_spec = tf.contrib.tpu.TPUEstimatorSpec(
+            #     mode=mode,
+            #     loss=loss,
+            #     eval_metrics=eval_metrics,
+            #     scaffold_fn=scaffold_fn,
+            # )
         else:
             raise ValueError("Only TRAIN and EVAL modes are supported: %s" % (mode))
 
@@ -357,7 +372,6 @@ def main(_):
 
     if FLAGS.do_eval:
         tf.logging.info("***** Running evaluation *****")
-        tf.logging.info("!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!! EVAL DOESNT WORK... YET")
         tf.logging.info("  Batch size = %d", FLAGS.eval_batch_size)
 
         eval_input_fn = input_fn_builder(
