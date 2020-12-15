@@ -22,6 +22,8 @@ import re
 import tensorflow as tf
 import lamb_optimizer
 
+from gpt_2_simple.src.ada_optimizer import AdafactorOptimizer, adafactor_decay_rate_adam
+from gpt_2_simple.src import memory_saving_gradients
 
 def create_optimizer(
     loss,
@@ -32,6 +34,7 @@ def create_optimizer(
     optimizer="adamw",
     poly_power=1.0,
     start_warmup_step=0,
+    use_memory_saving_gradients=False
 ):
     """Creates an optimizer training op."""
     global_step = tf.train.get_or_create_global_step()
@@ -102,16 +105,28 @@ def create_optimizer(
             epsilon=1e-6,
             exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"],
         )
+    elif optimizer =="adafactor":
+        beta_2= 0.999
+        decay_rate = adafactor_decay_rate_adam(beta_2)
+        optimizer = AdafactorOptimizer(
+            learning_rate=learning_rate,
+            decay_rate=decay_rate,
+            beta1=0.9,
+            name="Adafactor"
+        )
     else:
         raise ValueError("Not supported optimizer: ", optimizer)
 
     if use_tpu:
         optimizer = tf.contrib.tpu.CrossShardOptimizer(optimizer)
 
+
     tvars = tf.trainable_variables()
 
-
-    grads = tf.gradients(loss, tvars)
+    if use_memory_saving_gradients:
+        grads = memory_saving_gradients.gradients(loss, tvars)
+    else:
+        grads = tf.gradients(ys=loss, xs=tvars)
 
     # This is how bert was pre-trained.
     #(grads, _) = tf.clip_by_global_norm(grads, clip_norm=1.0)

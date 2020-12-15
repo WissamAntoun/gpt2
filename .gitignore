@@ -2,3 +2,4 @@ data/
 .vscode/
 __pycache__/
 scratch.py
+gpt-2-simple/

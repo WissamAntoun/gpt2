@@ -33,9 +33,8 @@ flags.DEFINE_integer("max_eval_steps", 10, "Maximum number of eval steps.")
 
 flags.DEFINE_float("poly_power", 1.0, "The power of poly decay.")
 
-flags.DEFINE_enum("optimizer", "lamb", ["adamw", "lamb","adafactor"], "The optimizer for training.")
+flags.DEFINE_enum("optimizer", "lamb", ["adamw", "lamb"], "The optimizer for training.")
 
-flags.DEFINE_bool("use_memory_saving_gradients", False, "Whether to use memory_saving_gradients")
 
 flags.DEFINE_integer(
     "iterations_per_loop",
