@@ -34,7 +34,8 @@ def create_int_feature(values):
 
 def main(_):
     tf.logging.set_verbosity(tf.logging.INFO)
-
+    logger = tf.get_logger()
+    logger.propagate = False
     input_files = []
     for input_pattern in FLAGS.input_file.split(","):
         input_files.extend(tf.gfile.Glob(input_pattern))
