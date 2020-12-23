@@ -18,8 +18,8 @@
 import tensorflow as tf
 import os
 
-from train.dataloader import input_fn_builder
-from train.modeling import model_fn_builder, GroverConfig
+from GROVER.dataloader import input_fn_builder
+from GROVER.modeling import model_fn_builder, GroverConfig
 
 flags = tf.flags
 
@@ -149,7 +149,7 @@ def main(_):
         model_fn=model_fn,
         config=run_config,
         train_batch_size=FLAGS.train_batch_size,
-        eval_batch_size=FLAGS.train_batch_size,
+        eval_batch_size=FLAGS.eval_batch_size,
         params={'model_dir': FLAGS.output_dir}
     )
     if FLAGS.do_train:
@@ -168,7 +168,7 @@ def main(_):
 
         eval_input_fn = input_fn_builder(
             input_files=input_files,
-            max_seq_length=FLAGS.max_seq_length,
+            seq_length=FLAGS.max_seq_length,
             is_training=False,
         )
 
